@@ -1,1 +1,230 @@
-/* You can add global styles to this file, and also import other style files */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'open-sans', sans-serif;
+}
+input {
+    cursor: pointer;
+}
+.anchor:hover {
+    background-color: #ddd;
+}
+button {
+    border-radius: 5px;
+    cursor: pointer;
+  }
+button:hover {
+    background-color: #ddd;
+  }
+
+  /* Table Styling */
+  table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-bottom: 10px;
+}
+tr, th {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+td {
+  border: 1px solid #ddd;
+}
+th {
+  padding-top: 12px;
+  padding-bottom: 12px;
+  text-align: left;
+  background-color: #04AA6D;
+  color: white;
+  position: relative;
+}
+tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+tr:hover {
+  background-color: #ddd;
+}
+/* dropdown checklist styling */
+.dropdown-check-list {
+  position: relative;
+  z-index: 10;
+  float: right;
+}
+
+.dropdown-check-list ul.items {
+  position: absolute;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  list-style: none;
+  padding: 5px;
+  z-index: 100;
+  display: none;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+.items:hover {
+  background-color: #d7d7d7;
+}
+
+.dropdown-check-list ul.items li {
+  list-style: none;
+  padding: 5px;
+  white-space: nowrap;
+}
+
+.dropdown-check-list.visible .items {
+  display: block;
+}
+
+/* download table excel  */
+.btn-primary {
+    cursor: pointer;
+    display: inline-block;
+    padding: 5px 10px;
+    border: 1px solid #ccc;
+    align-items: center;
+    border-radius: 5px;
+    background-color: white;
+    float: right;
+    margin-right: 4px;
+}
+
+/* gas day drag */
+.gas-day-drag {
+  background-color: #f2f2f2;
+  height: 35px;
+  display: flex;
+  align-items: center;
+  border: 1.5px dashed #ddd;
+  color: #9a9a9a;
+  border: 2px dashed #ccc;
+  padding: 20px;
+  text-align: center;
+  min-height: 50px;
+  width: 100%;
+}
+
+.cdk-drag-preview {
+  border: 2px solid #ccc;
+}
+
+.cdk-drag-preview {
+  border: 2px solid #ccc;
+  background-color: #f0f0f0;
+}
+
+.cdk-drop-list-dragging {
+  background-color: rgba(0, 0, 255, 0.1); /* Optional feedback for drag */
+}
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+/* gas day div */
+.gas-day-header {
+  background-color: #9a9a9a;
+  padding: 5px 2px;
+}
+.gas-day-header, .gas-day-body { 
+  font-size: small;
+}
+.gas-day-div {
+  width: 100%;
+}
+.cancel-btn {
+  background-color: none;
+  border: none;
+  font-size: larger;
+  align-self: right;
+  padding: 5px;
+}
+.gas-day-drag {
+  display: flex;
+  justify-content: space-between;
+}
+
+/* header arrow styling */
+
+.arrow-btn {
+  background: none;
+  border: none;
+  font-size: large;
+  position: absolute;
+  color: white;
+  outline: none; 
+  box-shadow: none;
+  left: 85%;
+  bottom: 5%;
+}
+
+.items {
+  padding: 10px;
+  background-color: white;
+  color: black;
+  font-size: small;
+  font-weight: normal;
+  position: absolute;
+  z-index: 10;
+  width: 100%;
+  list-style-type: none;
+  top: 90%;
+}
+
+.arrow-btn:hover {
+  background: none;
+}
+
+.arrow-btn:focus {
+  box-shadow: none;
+}
+
+/*  */
+.input-header {
+  position: absolute;
+  top: 30px;
+  left: 8px;
+  right: 8px;
+  width: auto;
+  top: 90%;
+}
+
+/* mat-form */
+
+ .cancel-btn.sml {
+  font-size: small;
+  margin-left: 10px;
+ }
+ .add-city.sml {
+  font-size: small;
+  margin-left: 5px;
+  padding: 5px;
+ }
+ .add-city {
+  padding: 10px 20px;
+  font-size: larger;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  cursor: pointer;
+  color: white;
+  background-color: #04AA6D;
+  transition: background-color 0.3s ease;
+}
+
+.add-city:hover {
+  background-color: #d2d2d2;
+  color: black;
+}
+
+.mdc-text-field--filled:not(.mdc-text-field--disabled) {
+  padding: 5px;
+}
+.items.date {
+  min-width: 120px
+}
+
+::ng-deep .example-month-picker .mat-calendar-period-button,
+::ng-deep .example-month-picker .mat-calendar-arrow {
+  display: none; /* optional UI changes */
+}

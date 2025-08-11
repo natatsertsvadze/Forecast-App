@@ -1,0 +1,167 @@
+<div class="dropdown-check-list" [ngClass]="{ 'visible': dropdownVisible }">
+
+  <span class="anchor" (click)="toggleDropdown()">
+    Filter Columns:
+    <span class="arrow" [ngClass]="{ 'rotated': dropdownVisible }">&#9660;</span> 
+  </span>
+  <ul class="items" *ngIf="dropdownVisible">
+    <li><input type="checkbox" [(ngModel)]="columnsVisibility.cityID" />City ID</li>
+    <li><input type="checkbox" [(ngModel)]="columnsVisibility.cityName" />City Name</li>
+    <li><input type="checkbox" [(ngModel)]="columnsVisibility.latitude" />Latitude</li>
+    <li><input type="checkbox" [(ngModel)]="columnsVisibility.longitude" />Longitude</li>
+    <li><input type="checkbox" [(ngModel)]="columnsVisibility.countryCode" />Country Code</li>
+    <li><input type="checkbox" [(ngModel)]="columnsVisibility.accuweatherKey" />Accu Weather Key</li>
+  </ul>
+</div>
+<button (click)="exportTableToExcel()" class="btn-primary">📑</button>
+
+<table class="save-table-btn">
+  <thead>
+    <tr>
+      <th *ngIf="columnsVisibility.cityID">
+        City ID
+        <button class="arrow-btn" (click)="toggleColumnFilter('cityID')">
+          {{ activeColumnFilter === 'cityID' ? '△' : '▽' }}
+        </button>
+        <input class="input-header" 
+        *ngIf="activeColumnFilter === 'cityID'" 
+        type="text" 
+        [(ngModel)]="cityIDHeader" 
+        (input)="applyColumnFilter('cityID')" 
+        placeholder="filter by cityID"/>
+      </th>
+      <th *ngIf="columnsVisibility.cityName">
+        City Name
+        <button class="arrow-btn" (click)="toggleColumnFilter('cityName')">
+          {{ activeColumnFilter === 'cityName' ? '△' : '▽' }}
+        </button>
+        <input class="input-header" 
+        *ngIf="activeColumnFilter === 'cityName'" 
+        type="text" 
+        [(ngModel)]="cityNameHeader" 
+        (input)="applyColumnFilter('cityName')" 
+        placeholder="filter by cityName"/>
+      </th>
+      <th *ngIf="columnsVisibility.latitude">
+        Latitude
+        <button class="arrow-btn" (click)="toggleColumnFilter('latitude')">
+          {{ activeColumnFilter === 'latitude' ? '△' : '▽' }}
+        </button>
+        <input class="input-header" 
+        *ngIf="activeColumnFilter === 'latitude'" 
+        type="text" 
+        [(ngModel)]="latitudeHeader" 
+        (input)="applyColumnFilter('latitude')" 
+        placeholder="filter by latitude"/>
+      </th>
+      <th *ngIf="columnsVisibility.longitude">
+        Longitude
+        <button class="arrow-btn" (click)="toggleColumnFilter('longitude')">
+          {{ activeColumnFilter === 'longitude' ? '△' : '▽' }}
+        </button>
+        <input class="input-header" 
+        *ngIf="activeColumnFilter === 'longitude'" 
+        type="text" 
+        [(ngModel)]="longitudeHeader" 
+        (input)="applyColumnFilter('longitude')" 
+        placeholder="filter by longitude"/>
+      </th>
+      <th *ngIf="columnsVisibility.countryCode">Country Code</th>
+      <th *ngIf="columnsVisibility.accuweatherKey">
+        Accu Weather Key
+        <button class="arrow-btn" (click)="toggleColumnFilter('accuWeatherKey')">
+          {{ activeColumnFilter === 'accuWeatherKey' ? '△' : '▽' }}
+        </button>
+        <input class="input-header" 
+        *ngIf="activeColumnFilter === 'accuWeatherKey'" 
+        type="text" 
+        [(ngModel)]="accuWeatherKeyHeader" 
+        (input)="applyColumnFilter('accuWeatherKey')" 
+        placeholder="filter by accuWeatherKey"/>
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let city of filteredCityData" (click)="goToCityResults(city.cityID)">
+      <td *ngIf="columnsVisibility.cityID" class="city-btns">{{ city.cityID }}</td>
+      <td *ngIf="columnsVisibility.cityName" class="city-btns">{{ city.cityName }}</td>
+      <td *ngIf="columnsVisibility.latitude" class="city-btns">{{ city.latitude }}</td>
+      <td *ngIf="columnsVisibility.longitude" class="city-btns">{{ city.longitude }}</td>
+      <td *ngIf="columnsVisibility.countryCode" class="city-btns">{{ city.countryCode }}</td>
+      <td *ngIf="columnsVisibility.accuweatherKey" class="city-btns">{{ city.accuweatherKey }}</td>
+      <td class="edit-delete" *ngIf="city.isNew">
+        <button class="edit-btn" (click)="openEditModal(city, $event)">Edit</button>
+        <button class="delete-btn" (click)="openDeleteModal(city.cityID, $event)">Delete</button>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="window-overlay" *ngIf="isDeleteModalOpen">
+  <div class="window">
+    <p>Are you sure you want to delete <strong>{{ cityNameToDelete }}</strong>?</p>
+    <div class="window-buttons">
+      <button class="confirm-btn" (click)="deleteCity()">Yes, Delete</button>
+      <button class="cancel-btn" (click)="closeDeleteModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="window-overlay" *ngIf="isEditModalOpen">
+  <div class="window">
+    <h3>Edit City</h3>
+    <label>City Name:</label>
+    <input type="text" [(ngModel)]="editedCity.cityName">
+
+    <label>Latitude:</label>
+    <input type="number" step="any" [(ngModel)]="editedCity.latitude">
+
+    <label>Longitude:</label>
+    <input type="number" step="any" [(ngModel)]="editedCity.longitude">
+
+    <label>Country Code:</label>
+    <input type="text" [(ngModel)]="editedCity.countryCode">
+
+    <label>AccuWeather Key:</label>
+    <input type="text" [(ngModel)]="editedCity.accuweatherKey">
+
+    <div class="window-buttons">
+      <button class="confirm-btn" (click)="saveEditedCity()">Save</button>
+      <button class="cancel-btn" (click)="closeEditModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<button class="add-city" (click)="openModal()">Add City</button>
+
+<!-- Modal -->
+<div class="modal" *ngIf="isModalOpen">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Add New City</h2>
+      <span class="close" (click)="closeModal()">&times;</span>
+    </div>
+    
+   <form #cityForm="ngForm" (ngSubmit)="addCity()">
+  <label>City Name:</label>
+  <input type="text" [(ngModel)]="newCity.cityName" name="cityName" required #cityName="ngModel">
+  <div *ngIf="cityName.invalid && cityName.touched" class="error">City Name is required</div>
+
+  <label>Latitude:</label>
+  <input type="number" step="any" [(ngModel)]="newCity.latitude" name="latitude" required #latitude="ngModel">
+  <div *ngIf="latitude.invalid && latitude.touched" class="error">Latitude is required</div>
+
+  <label>Longitude:</label>
+  <input type="number" step="any" [(ngModel)]="newCity.longitude" name="longitude" required #longitude="ngModel">
+  <div *ngIf="longitude.invalid && longitude.touched" class="error">Longitude is required</div>
+
+  <label>Country Code:</label>
+  <input type="text" [(ngModel)]="newCity.countryCode" name="countryCode" required #countryCode="ngModel">
+  <div *ngIf="countryCode.invalid && countryCode.touched" class="error">Country Code is required</div>
+
+  <label>Accu Weather Key:</label>
+  <input type="text" [(ngModel)]="newCity.accuWeatherKey" name="accuWeatherKey">
+
+  <button type="submit" class="submit-btn" [disabled]="cityForm.invalid">Submit</button>
+</form>
+

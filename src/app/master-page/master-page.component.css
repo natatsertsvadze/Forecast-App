@@ -1,0 +1,36 @@
+.master-page {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+    h1 {
+    text-align: center;
+    color: white;
+    background-color: #037a52;
+    padding: 20px;
+    margin: 0;
+  }
+  .navbar {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    padding: 20px ;
+    margin-top: auto;
+  }
+  
+  .navbar button {
+    padding: 10px 20px;
+    font-size: larger;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    cursor: pointer;
+    color: white;
+    background-color: #04AA6D;
+    transition: background-color 0.3s ease;
+  }
+  
+  .navbar button:hover {
+    background-color: #d2d2d2;
+    color: black;
+  }
+  

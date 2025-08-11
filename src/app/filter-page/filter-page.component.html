@@ -1,0 +1,486 @@
+<div *ngIf="isModalOpen" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Filter Cities</h2>
+    </div>
+    
+    <div class="modal-body">
+      <div class="city-selector">
+        <div class="input-wrapper">
+          <input 
+            [(ngModel)]="cityInput" 
+            placeholder="City" 
+            (focus)="arrowDropdown(true)" 
+            (blur)="onBlur()"
+            (click)="preventEventPropagation($event)"
+            input="filterCities()">
+            
+          <button class="arrow-button1" (click)="arrowDropdown(!showDropdown)">
+            <span class="arrow1"></span>
+          </button>
+        </div>
+
+        <div class="dropdown-wrapper" *ngIf="showDropdown">
+          <ul class="city-list">
+            <li *ngIf="!cityData.length">No cities available</li>
+            <li 
+            class="city-names-li" 
+            *ngFor="let city of cityData" 
+            (click)="selectCity(city.cityName)">
+              {{ city.cityName }}
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <input [(ngModel)]="startDateInput" type="date" placeholder="Start Date">
+      <input [(ngModel)]="endDateInput" type="date" placeholder="End Date">
+    </div>
+
+    <div class="modal-footer">
+      <button (click)="checkCity()">Search</button>
+      <button (click)="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+<h1 class="heading" *ngIf="cityData.length; else loading">{{ cityName }}</h1>
+
+<div class="dropdown-check-list" [ngClass]="{ 'visible': dropdownVisible }">
+  <span class="anchor" (click)="toggleDropdown()">
+    Filter Columns:
+    <span class="arrow" [ngClass]="{ 'rotated': dropdownVisible}">
+      &#9660;
+    </span>
+  </span>
+  <button (click)="openModal()" class="btn-open-modal">Filter Cities</button>
+
+  <ul class="items" *ngIf="dropdownVisible">
+    <li><input type="checkbox"[(ngModel)]="columnsVisibility.providerName"> Provider Name</li>
+    <li><input type="checkbox"[(ngModel)]="columnsVisibility.cityName"> City Name</li>
+    <li><input type="checkbox" [(ngModel)]="columnsVisibility.dataDateTimeUTC" /> Date</li>
+    <li><input type="checkbox" [(ngModel)]="columnsVisibility.temp" /> Temperature</li>
+    <li><input type="checkbox" [(ngModel)]="columnsVisibility.visibility" /> Visibility</li>
+    <li><input type="checkbox" [(ngModel)]="columnsVisibility.dewPoint" /> Dew Point</li>
+    <li><input type="checkbox" [(ngModel)]="columnsVisibility.feelsLike" /> Feels Like</li>
+    <li><input type="checkbox" [(ngModel)]="columnsVisibility.pressure" /> Pressure</li>
+    <li><input type="checkbox" [(ngModel)]="columnsVisibility.humidity" /> Humidity</li>
+    <li><input type="checkbox" [(ngModel)]="columnsVisibility.windSpeed" /> Wind Speed</li>
+    <li><input type="checkbox" [(ngModel)]="columnsVisibility.rain1h" /> Rain 1h</li>
+    <li><input type="checkbox" [(ngModel)]="columnsVisibility.snow1h" /> Snow 1h</li>
+    <li><input type="checkbox" [(ngModel)]="columnsVisibility.cloudsAll" /> Clouds All</li>
+    <li><input type="checkbox" [(ngModel)]="columnsVisibility.isForecast" /> Is Forecast</li>
+    <li><input type="checkbox" [(ngModel)]="columnsVisibility.gasDay" /> Gas Day</li>
+</ul>
+</div>
+
+<button (click)="exportTableToExcel()" class="btn-primary">📑</button>
+
+<div class="gas-day-drag" cdkDropList (cdkDropListDropped)="groupByGasDay($event)">
+  Drag "Gas Day" column header here to group by Gas Day
+  <button *ngIf="cancelBtn"  class="cancel-btn" (click)="cancelGasDay()">✖</button>
+</div>
+
+<table *ngIf="isGasDay" class="gas-day-div">
+  <thead class="gas-day-thead">
+    <tr class="gas-day-tr">
+      <th class="gas-day-header" *ngIf="columnsVisibility.gasDay">Gas Day
+        <button class="arrow-btn" (click)="toggleColumnFilter('gasDay')">
+          {{ activeColumnFilter === 'gasDay' ? '△' : '▽' }}
+        </button>
+    
+        <ul *ngIf="activeColumnFilter === 'gasDay'" class="items">
+          <li *ngFor="let option of getUniqueOptions('gasDay')">
+            <input
+              type="checkbox"
+              [(ngModel)]="checkboxStates['gasDay'][option]"  (ngModelChange)="applyAllFilters()"
+
+            />
+            {{ option.replace('T', ' ') }}
+          </li>
+        </ul>
+      </th>
+      <th class="gas-day-header" *ngIf="columnsVisibility.providerName">Provider Name
+        <button class="arrow-btn" (click)="toggleColumnFilter('providerName')">
+          {{ activeColumnFilter === 'providerName' ? '△' : '▽' }}
+        </button>
+    
+        <ul *ngIf="activeColumnFilter === 'providerName'" class="items">
+          <li *ngFor="let option of getUniqueOptions('providerName')">
+            <input
+type="checkbox"
+[(ngModel)]="checkboxStates['providerName'][option]"
+(ngModelChange)="applyAllFilters()"
+/>
+{{ option }}
+          </li>
+        </ul>
+      </th>
+      <th *ngIf="columnsVisibility.dataDateTimeUTC" class="gas-day-header">
+        Date
+        <button class="arrow-btn" (click)="toggleColumnFilter('dataDateTimeUTC')">
+          {{ activeColumnFilter === 'dataDateTimeUTC' ? '△' : '▽' }}
+        </button>
+        <ul *ngIf="activeColumnFilter === 'dataDateTimeUTC'" class="items date">
+          <li>
+            <!-- Date Picker -->
+            <mat-form-field style="width: 100%">
+              <input
+                matInput
+                [matDatepicker]="datePicker"
+                [(ngModel)]="dateInput"
+                placeholder="Choose a date"
+                style="height: 13px; font-size: small;"
+              />
+              <mat-datepicker-toggle matSuffix [for]="datePicker"></mat-datepicker-toggle>
+              <mat-datepicker #datePicker startView="month"></mat-datepicker>
+            </mat-form-field>
+      
+            <!-- Time Picker (using input[type="time"]) -->
+            <mat-form-field style="width: 100%">
+              <mat-label>Choose Time</mat-label>
+              <mat-select [(ngModel)]="timeInput">
+                <mat-option *ngFor="let time of timeOptions" [value]="time">
+                  {{ time }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+      
+            <div style="display: flex; gap: 0.2rem; font-size: smaller; margin-bottom: 5px;">
+              <button class="add-city sml" (click)="addDateTime()">Add</button>
+              <button class="add-city sml" (click)="addDateAllHours()">All Hours</button>
+              <li *ngIf="selectedDateTimes.length > 0">
+                <button class="cancel-btn sml" (click)="clearAllDateTimes()">Clear All</button>
+              </li>
+            </div>
+          </li>
+      
+          <!-- Display selected date-time options -->
+          <li *ngFor="let dt of selectedDateTimes; let i = index">
+            {{ dt.displayDate }} {{ dt.hour !== null ? (dt.hour.toString().padStart(2, '0') + ':00') : '' }}
+            <button class="cancel-btn sml" (click)="removeDateTime(i)">✕</button>
+          </li>
+        </ul>
+      </th>
+      <th class="gas-day-header" *ngIf="columnsVisibility.temp">Temperature
+        <button class="arrow-btn" (click)="toggleColumnFilter('temp')">
+          {{ activeColumnFilter === 'temp' ? '△' : '▽' }}
+        </button>
+        <input class="input-header" *ngIf="activeColumnFilter === 'temp'" type="number"  [(ngModel)]="numericFilters['temp']" (input)="applyAllFilters()" placeholder="filter by temp"/>
+      </th>
+      <th class="gas-day-header" *ngIf="columnsVisibility.visibility">Visibility
+        <button class="arrow-btn" (click)="toggleColumnFilter('visibility')">
+          {{ activeColumnFilter === 'visibility' ? '△' : '▽' }}
+        </button>
+        <input class="input-header"  *ngIf="activeColumnFilter === 'visibility'" type="number" [(ngModel)]="numericFilters['visibility']" (input)="applyAllFilters()" placeholder="filter by visibility"/>
+      </th>
+      <th class="gas-day-header" *ngIf="columnsVisibility.dewPoint">Dew Point
+        <button class="arrow-btn" (click)="toggleColumnFilter('dewPoint')">
+          {{ activeColumnFilter === 'dewPoint' ? '△' : '▽' }}
+        </button>
+        <input class="input-header" *ngIf="activeColumnFilter === 'dewPoint'" type="number" [(ngModel)]="numericFilters['dewPoint']" (input)="applyAllFilters()" placeholder="filter by dewPoint"/>
+      </th>
+      <th class="gas-day-header"*ngIf="columnsVisibility.feelsLike">Feels Like
+        <button class="arrow-btn" (click)="toggleColumnFilter('feelsLike')">
+          {{ activeColumnFilter === 'feelsLike' ? '△' : '▽' }}
+        </button>
+        <input class="input-header"  *ngIf="activeColumnFilter === 'feelsLike'" type="number" [(ngModel)]="numericFilters['feelsLike']" (input)="applyAllFilters()" placeholder="filter by feelsLike"/>
+      </th>
+      <th class="gas-day-header"*ngIf="columnsVisibility.pressure">Pressure
+        <button class="arrow-btn" (click)="toggleColumnFilter('pressure')">
+          {{ activeColumnFilter === 'pressure' ? '△' : '▽' }}
+        </button>
+        <input class="input-header"  *ngIf="activeColumnFilter === 'pressure'" type="number" [(ngModel)]="numericFilters['pressure']" (input)="applyAllFilters()" placeholder="filter by pressure"/>
+      </th>
+      <th class="gas-day-header"*ngIf="columnsVisibility.humidity">Humidity
+        <button class="arrow-btn" (click)="toggleColumnFilter('humidity')">
+          {{ activeColumnFilter === 'humidity' ? '△' : '▽' }}
+        </button>
+        <input  class="input-header" *ngIf="activeColumnFilter === 'humidity'" type="number" [(ngModel)]="numericFilters['humidity']" (input)="applyAllFilters()" placeholder="filter by humidity"/>
+      </th>
+      <th class="gas-day-header"*ngIf="columnsVisibility.windSpeed">Wind Speed
+        <button class="arrow-btn" (click)="toggleColumnFilter('windSpeed')">
+          {{ activeColumnFilter === 'windSpeed' ? '△' : '▽' }}
+        </button>
+        <input class="input-header"  *ngIf="activeColumnFilter === 'windSpeed'" type="number" [(ngModel)]="numericFilters['windSpeed']" (input)="applyAllFilters()" placeholder="filter by windSpeed"/>
+      </th>
+      <th class="gas-day-header"*ngIf="columnsVisibility.rain1h">Rain 1h
+        <button class="arrow-btn" (click)="toggleColumnFilter('rain1h')">
+          {{ activeColumnFilter === 'rain1h' ? '△' : '▽' }}
+        </button>
+    
+        <input class="input-header"  *ngIf="activeColumnFilter === 'rain1h'" type="number" [(ngModel)]="numericFilters['rain1h']" (input)="applyAllFilters()" placeholder="filter by rain1h"/>
+      </th>
+      <th class="gas-day-header"*ngIf="columnsVisibility.snow1h">Snow 1h
+        <button class="arrow-btn" (click)="toggleColumnFilter('snow1h')">
+          {{ activeColumnFilter === 'snow1h' ? '△' : '▽' }}
+        </button>
+      
+        <ul *ngIf="activeColumnFilter === 'snow1h' && getUniqueOptions('snow1h').length > 0" class="items">
+          <li *ngFor="let option of getUniqueOptions('snow1h')">
+            <input
+              class="input-header"
+              type="checkbox"
+              [(ngModel)]="checkboxStates['snow1h'][option]"
+              (ngModelChange)="applyAllFilters()"
+            />
+            {{ option }}
+          </li>
+        </ul>
+      </th>
+      <th class="gas-day-header"*ngIf="columnsVisibility.cloudsAll">Clouds All
+        <button class="arrow-btn" (click)="toggleColumnFilter('cloudsAll')">
+          {{ activeColumnFilter === 'cloudsAll' ? '△' : '▽' }}
+        </button>
+        <input class="input-header"  *ngIf="activeColumnFilter === 'cloudsAll'" type="number" [(ngModel)]="numericFilters['cloudsAll']" (input)="applyAllFilters()" placeholder="filter by cloudsAll"/>
+      </th>
+      <th class="gas-day-header"*ngIf="columnsVisibility.isForecast">Is Forecast
+        <button class="arrow-btn" (click)="toggleColumnFilter('isForecast')">
+          {{ activeColumnFilter === 'isForecast' ? '△' : '▽' }}
+        </button>
+    
+        <ul *ngIf="activeColumnFilter === 'isForecast'" class="items">
+          <li *ngFor="let option of getUniqueOptions('isForecast')">
+            <input
+              type="checkbox"
+              [(ngModel)]="checkboxStates['isForecast'][option]"  (ngModelChange)="applyAllFilters()"
+            />
+            {{ option }}
+          </li>
+        </ul>
+      </th>
+    </tr>
+  </thead>
+  <tbody class="gas-day-tbody">
+    <tr *ngFor="let entry of cityData">
+      <td class="gas-day-body" *ngIf="columnsVisibility.gasDay">{{ entry.gasDay | date:'yyyy-MM-dd HH:mm:ss' }}</td>
+      <td class="gas-day-body" *ngIf="columnsVisibility.providerName">{{ entry.provider.providerName }}</td>
+      <td class="gas-day-body" *ngIf="columnsVisibility.dataDateTimeUTC">{{ entry.dataDateTimeUTC | date:'yyyy-MM-dd HH:mm:ss' }}</td>
+      <td class="gas-day-body" *ngIf="columnsVisibility.temp">{{ entry.temp }}°C</td>
+      <td class="gas-day-body" *ngIf="columnsVisibility.visibility">{{ entry.visibility }}</td>
+      <td class="gas-day-body" *ngIf="columnsVisibility.dewPoint">{{ entry.dewPoint }}</td>
+      <td class="gas-day-body" *ngIf="columnsVisibility.feelsLike">{{ entry.feelsLike }}</td>
+      <td class="gas-day-body" *ngIf="columnsVisibility.pressure">{{ entry.pressure }}</td>
+      <td class="gas-day-body" *ngIf="columnsVisibility.humidity">{{ entry.humidity }}</td>
+      <td class="gas-day-body" *ngIf="columnsVisibility.windSpeed">{{ entry.windSpeed }}</td>
+      <td class="gas-day-body" *ngIf="columnsVisibility.rain1h">{{ entry.rain1h }}</td>
+      <td class="gas-day-body" *ngIf="columnsVisibility.snow1h">{{ entry.snow1h }}</td>
+      <td class="gas-day-body" *ngIf="columnsVisibility.cloudsAll">{{ entry.cloudsAll }}</td>
+      <td class="gas-day-body" *ngIf="columnsVisibility.isForecast">{{ entry.isForecast }}</td>
+    </tr>
+  </tbody>
+  </table>
+
+  <table class="save-table-btn" *ngIf="cityData.length && !isGasDay">
+    <thead cdkDropList (cdkDropListDropped)="groupByGasDay($event)">
+      <tr>
+        <th *ngIf="columnsVisibility.providerName" class="table-header">
+          Provider Name
+          <button class="arrow-btn" (click)="toggleColumnFilter('providerName')">
+            {{ activeColumnFilter === 'providerName' ? '△' : '▽' }}
+          </button>
+      
+          <ul *ngIf="activeColumnFilter === 'providerName'" class="items">
+            <li *ngFor="let option of getUniqueOptions('providerName')">
+              <input
+  type="checkbox"
+  [(ngModel)]="checkboxStates['providerName'][option]"
+  (ngModelChange)="applyAllFilters()"
+  />
+{{ option }}
+            </li>
+          </ul>
+        </th>
+        <th class="table-header" *ngIf="columnsVisibility.cityName">Name</th>
+        <th *ngIf="columnsVisibility.dataDateTimeUTC" class="table-header">
+          Date
+          <button class="arrow-btn" (click)="toggleColumnFilter('dataDateTimeUTC')">
+            {{ activeColumnFilter === 'dataDateTimeUTC' ? '△' : '▽' }}
+          </button>
+          <ul *ngIf="activeColumnFilter === 'dataDateTimeUTC'" class="items date">
+            <li>
+              <!-- Date Picker -->
+              <mat-form-field style="width: 100%">
+                <input
+                  matInput
+                  [matDatepicker]="datePicker"
+                  [(ngModel)]="dateInput"
+                  placeholder="Choose a date"
+                  style="height: 13px; font-size: small;"
+                />
+                <mat-datepicker-toggle matSuffix [for]="datePicker"></mat-datepicker-toggle>
+                <mat-datepicker #datePicker startView="month"></mat-datepicker>
+              </mat-form-field>
+        
+              <!-- Time Picker (using input[type="time"]) -->
+              <mat-form-field style="width: 100%">
+                <mat-label>Choose Time</mat-label>
+                <mat-select [(ngModel)]="timeInput">
+                  <mat-option *ngFor="let time of timeOptions" [value]="time">
+                    {{ time }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+        
+              <div style="display: flex; gap: 0.2rem; font-size: smaller; margin-bottom: 5px;">
+                <button class="add-city sml" (click)="addDateTime()">Add</button>
+                <button class="add-city sml" (click)="addDateAllHours()">All Hours</button>
+                <li *ngIf="selectedDateTimes.length > 0">
+                  <button class="cancel-btn sml" (click)="clearAllDateTimes()">Clear All</button>
+                </li>
+              </div>
+            </li>
+        
+            <!-- Display selected date-time options -->
+            <li *ngFor="let dt of selectedDateTimes; let i = index">
+              {{ dt.displayDate }} {{ dt.hour !== null ? (dt.hour.toString().padStart(2, '0') + ':00') : '' }}
+              <button class="cancel-btn sml" (click)="removeDateTime(i)">✕</button>
+            </li>
+          </ul>
+        </th>
+        
+<th class="custom-header" *ngIf="columnsVisibility.temp">
+          Temperature
+          <button class="arrow-btn" (click)="toggleColumnFilter('temp')">
+            {{ activeColumnFilter === 'temp' ? '△' : '▽' }}
+          </button>
+          </th>
+          <input class="input-header" *ngIf="activeColumnFilter === 'temp'" type="number"  [(ngModel)]="numericFilters['temp']" (input)="applyAllFilters()" placeholder="filter by temp"/>
+
+      <th class="table-header" *ngIf="columnsVisibility.visibility">
+        Visibility 
+        <button class="arrow-btn" (click)="toggleColumnFilter('visibility')">
+          {{ activeColumnFilter === 'visibility' ? '△' : '▽' }}
+        </button>
+        <input class="input-header"  *ngIf="activeColumnFilter === 'visibility'" type="number" [(ngModel)]="numericFilters['visibility']" (input)="applyAllFilters()" placeholder="filter by visibility"/>
+      </th>
+      <th class="table-header" *ngIf="columnsVisibility.dewPoint">
+        Dew Point 
+        <button class="arrow-btn" (click)="toggleColumnFilter('dewPoint')">
+          {{ activeColumnFilter === 'dewPoint' ? '△' : '▽' }}
+        </button>
+        <input class="input-header" *ngIf="activeColumnFilter === 'dewPoint'" type="number" [(ngModel)]="numericFilters['dewPoint']" (input)="applyAllFilters()" placeholder="filter by dewPoint"/>
+      </th>
+      <th class="table-header" *ngIf="columnsVisibility.feelsLike">
+        Feels Like 
+        <button class="arrow-btn" (click)="toggleColumnFilter('feelsLike')">
+          {{ activeColumnFilter === 'feelsLike' ? '△' : '▽' }}
+        </button>
+        <input class="input-header"  *ngIf="activeColumnFilter === 'feelsLike'" type="number" [(ngModel)]="numericFilters['feelsLike']" (input)="applyAllFilters()" placeholder="filter by feelsLike"/>
+      </th>
+      <th class="table-header" *ngIf="columnsVisibility.pressure">
+        Pressure 
+        <button class="arrow-btn" (click)="toggleColumnFilter('pressure')">
+          {{ activeColumnFilter === 'pressure' ? '△' : '▽' }}
+        </button>
+        <input class="input-header"  *ngIf="activeColumnFilter === 'pressure'" type="number" [(ngModel)]="numericFilters['pressure']" (input)="applyAllFilters()" placeholder="filter by pressure"/>
+      </th>
+      <th class="table-header" *ngIf="columnsVisibility.humidity">
+        Humidity 
+        <button class="arrow-btn" (click)="toggleColumnFilter('humidity')">
+          {{ activeColumnFilter === 'humidity' ? '△' : '▽' }}
+        </button>
+        <input  class="input-header" *ngIf="activeColumnFilter === 'humidity'" type="number" [(ngModel)]="numericFilters['humidity']" (input)="applyAllFilters()" placeholder="filter by humidity"/>
+      </th>
+      <th class="table-header" *ngIf="columnsVisibility.windSpeed">
+        Wind Speed 
+        <button class="arrow-btn" (click)="toggleColumnFilter('windSpeed')">
+          {{ activeColumnFilter === 'windSpeed' ? '△' : '▽' }}
+        </button>
+        <input class="input-header"  *ngIf="activeColumnFilter === 'windSpeed'" type="number" [(ngModel)]="numericFilters['windSpeed']" (input)="applyAllFilters()" placeholder="filter by windSpeed"/>
+      </th>
+      <th *ngIf="columnsVisibility.rain1h" class="table-header">
+        Rain 1h
+        <button class="arrow-btn" (click)="toggleColumnFilter('rain1h')">
+          {{ activeColumnFilter === 'rain1h' ? '△' : '▽' }}
+        </button>
+        <input class="input-header"  *ngIf="activeColumnFilter === 'rain1h'" type="number" [(ngModel)]="numericFilters['rain1h']" (input)="applyAllFilters()" placeholder="filter by rain1h"/>
+      </th>
+      <th *ngIf="columnsVisibility.snow1h" class="table-header">
+        Snow 1h
+        <button class="arrow-btn" (click)="toggleColumnFilter('snow1h')">
+          {{ activeColumnFilter === 'snow1h' ? '△' : '▽' }}
+        </button>
+      
+        <ul *ngIf="activeColumnFilter === 'snow1h' && getUniqueOptions('snow1h').length > 0" class="items">
+          <li *ngFor="let option of getUniqueOptions('snow1h')">
+            <input
+              class="input-header"
+              type="checkbox"
+              [(ngModel)]="checkboxStates['snow1h'][option]"
+              (ngModelChange)="applyAllFilters()"
+            />
+            {{ option }}
+          </li>
+        </ul>
+      </th>
+      
+      <th class="table-header" *ngIf="columnsVisibility.cloudsAll">
+        Clouds All 
+        <button class="arrow-btn" (click)="toggleColumnFilter('cloudsAll')">
+          {{ activeColumnFilter === 'cloudsAll' ? '△' : '▽' }}
+        </button>
+        <input class="input-header"  *ngIf="activeColumnFilter === 'cloudsAll'" type="number" [(ngModel)]="numericFilters['cloudsAll']" (input)="applyAllFilters()" placeholder="filter by cloudsAll"/>
+      </th>
+      <th *ngIf="columnsVisibility.isForecast" class="table-header">
+        is Forecast
+        <button class="arrow-btn" (click)="toggleColumnFilter('isForecast')">
+          {{ activeColumnFilter === 'isForecast' ? '△' : '▽' }}
+        </button>
+    
+        <ul *ngIf="activeColumnFilter === 'isForecast'" class="items">
+          <li *ngFor="let option of getUniqueOptions('isForecast')">
+            <input
+              type="checkbox"
+              [(ngModel)]="checkboxStates['isForecast'][option]"  (ngModelChange)="applyAllFilters()"
+            />
+            {{ option }}
+          </li>
+        </ul>
+      </th>
+      <th *ngIf="columnsVisibility.gasDay"  cdkDrag (cdkDragStarted)="onDragStart('gasDay')" class="table-header">
+        Gas Day
+        <button class="arrow-btn" (click)="toggleColumnFilter('gasDay')">
+          {{ activeColumnFilter === 'gasDay' ? '△' : '▽' }}
+        </button>
+    
+        <ul *ngIf="activeColumnFilter === 'gasDay'" class="items">
+          <li *ngFor="let option of getUniqueOptions('gasDay')">
+            <input
+              type="checkbox"
+              [(ngModel)]="checkboxStates['gasDay'][option]"  (ngModelChange)="applyAllFilters()"
+
+            />
+            {{ option.replace('T', ' ') }}
+          </li>
+        </ul>
+      </th>
+    </tr>
+    </thead>
+  
+    <tbody>
+      <ng-container  *ngFor="let entry of filteredCityData">
+      <tr>
+        <td *ngIf="columnsVisibility.providerName">{{ entry.provider?.providerName }}</td>
+        <td *ngIf="columnsVisibility.cityName">{{ entry.city?.cityName }}</td>
+        <td *ngIf="columnsVisibility.dataDateTimeUTC">{{ entry.dataDateTimeUTC | date:'yyyy-MM-dd HH:mm:ss' }}</td>
+        <td *ngIf="columnsVisibility.temp">{{ entry.temp }}°C</td>
+        <td *ngIf="columnsVisibility.visibility">{{ entry.visibility }}</td>
+        <td *ngIf="columnsVisibility.dewPoint">{{ entry.dewPoint }}</td>
+        <td *ngIf="columnsVisibility.feelsLike">{{ entry.feelsLike }}</td>
+        <td *ngIf="columnsVisibility.pressure">{{ entry.pressure }}</td>
+        <td *ngIf="columnsVisibility.humidity">{{ entry.humidity }}</td>
+        <td *ngIf="columnsVisibility.windSpeed">{{ entry.windSpeed }}</td>
+        <td *ngIf="columnsVisibility.rain1h">{{ entry.rain1h }}</td>
+        <td *ngIf="columnsVisibility.snow1h">{{ entry.snow1h }}</td>
+        <td *ngIf="columnsVisibility.cloudsAll">{{ entry.cloudsAll }}</td>
+        <td *ngIf="columnsVisibility.isForecast">{{ entry.isForecast }}</td>
+        <td *ngIf="columnsVisibility.gasDay">{{ entry.gasDay | date:'yyyy-MM-dd HH:mm:ss' }}</td>
+      </tr>
+    </ng-container>
+    </tbody>
+    
+</table>
+
+<ng-template #loading>
+  <p>Loading city data...</p>
+</ng-template>

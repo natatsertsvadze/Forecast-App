@@ -1,0 +1,43 @@
+.heading {
+    display: inline-block;
+}
+  .anchor {
+    cursor: pointer;
+    display: inline-block;
+    padding: 5px 10px;
+    border: 1px solid #ccc;
+    position: relative;
+    align-items: center;
+    border-radius: 5px;
+  }
+  
+  .arrow {
+    font-size: 16px;
+    transition: transform 0.2s ease-in-out;
+    display: inline-block;
+    padding-left: 18px;
+  }
+  
+  .arrow.rotated {
+    transform: rotate(180deg);
+  }
+
+ 
+  .column-filter {
+    position: absolute;
+    background-color: white;
+    border: 1px solid #ccc;
+    padding: 10px;
+    z-index: 10;
+  }
+  
+  th {
+    position: relative;
+  }
+  
+  .column-filter input {
+    width: 150px;
+    padding: 5px;
+    border-radius: 4px;
+  }
+  
