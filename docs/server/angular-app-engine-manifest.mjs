@@ -1,6 +1,6 @@
 
 export default {
-  basePath: '/Forecast-App',
+  basePath: 'https://natatsertsvadze.github.io/Forecast-App',
   supportedLocales: {
   "en-US": ""
 },
