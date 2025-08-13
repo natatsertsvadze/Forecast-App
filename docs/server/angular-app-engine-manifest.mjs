@@ -1,6 +1,6 @@
 
 export default {
-  basePath: 'Forecast-App',
+  basePath: '/Forecast-App',
   supportedLocales: {
   "en-US": ""
 },
